@@ -114,7 +114,7 @@ app.delete("/customers/:customerId", function (req, res) {
 		});
 });
 
-// - If you don't have it already, add a new GET endpoint `/products` to load all the product names along with their prices and supplier names.
+// Get all products
 app.get("/products", (req, res) => {
 	pool
 		.query("select * from products inner join product_availability on products.id=product_availability.prod_id inner join suppliers on suppliers.id=product_availability.supp_id")
@@ -125,9 +125,33 @@ app.get("/products", (req, res) => {
 		});
 });
 
-// - Add a new GET endpoint `/customers/:customerId/orders` to load all the orders along with the items in the orders of a specific customer. Especially, the following information should be returned: order references, order dates, product names, unit prices, suppliers and quantities.
-// - Add a new POST endpoint `/products` to create a new product.
+// Create a new product
 
+app.post("/products", function (req, res) {
+	const newProduct = req.body.product_name;
+
+
+	if (!req.body.product) {
+		return res.status(400).send("Please enter product name");
+	}
+
+	pool.query("select * from products where product_name=$1", [newProduct]).then((result) => {
+		if (result.rows.length > 0) {
+			return res.status(400).send("A product with this name already exists!");
+		} else {
+			const query = "insert into products (product_name) VALUES ($1)";
+			pool
+				.query(query, [newProduct])
+				.then(() => res.send("Product created!"))
+				.catch((error) => {
+					console.error(error);
+					res.status(500).json(error);
+				});
+		}
+	});
+});
+
+// - Add a new GET endpoint `/customers/:customerId/orders` to load all the orders along with the items in the orders of a specific customer. Especially, the following information should be returned: order references, order dates, product names, unit prices, suppliers and quantities.
 // - Update the previous GET endpoint `/products` to filter the list of products by name using a query parameter, for example `/products?name=Cup`. This endpoint should still work even if you don't use the `name` query parameter!
 // - Add a new POST endpoint `/availability` to create a new product availability (with a price and a supplier id). Check that the price is a positive integer and that both the product and supplier ID's exist in the database, otherwise return an error.
 // - Add a new POST endpoint `/customers/:customerId/orders` to create a new order (including an order date, and an order reference) for a customer. Check that the customerId corresponds to an existing customer or return an error.

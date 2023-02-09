@@ -126,7 +126,6 @@ app.get("/products", (req, res) => {
 });
 
 // Create a new product
-
 app.post("/products", function (req, res) {
 	const newProduct = req.body.product_name;
 
@@ -150,15 +149,15 @@ app.post("/products", function (req, res) {
 	});
 });
 
-// - `/customers/:customerId/orders`
+// get customer orders
 app.get("/customers/:customerId/orders", function (req, res) {
 	const customerId = req.params.customerId;
 
 	pool
 	.query(
 		`select order_reference, order_date, product_name, unit_price, supplier_name, quantity from orders
-  		join order_items om orders.id = order_items.order_id
-  		join products ON order_items.product_id = products.id
+  		join order_items on orders.id = order_items.order_id
+  		join products on order_items.product_id = products.id
   		join product_availability on order_items.product_id = product_availability.prod_id
   		join suppliers ON order_items.supplier_id = suppliers.id
   		where orders.customer_id = '${customerId}'`
@@ -169,6 +168,7 @@ app.get("/customers/:customerId/orders", function (req, res) {
 			res.status(500).json(error);
 		});
 });
+
 // - Add a new POST endpoint `/availability` to create a new product availability (with a price and a supplier id). Check that the price is a positive integer and that both the product and supplier ID's exist in the database, otherwise return an error.
 // - Add a new POST endpoint `/customers/:customerId/orders` to create a new order (including an order date, and an order reference) for a customer. Check that the customerId corresponds to an existing customer or return an error.
 app.get("/", (req, res) => {

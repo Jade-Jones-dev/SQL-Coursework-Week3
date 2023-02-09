@@ -169,9 +169,44 @@ app.get("/customers/:customerId/orders", function (req, res) {
 		});
 });
 
-// - Add a new POST endpoint `/availability` to create a new product availability (with a price and a supplier id). Check that the price is a positive integer and that both the product and supplier ID's exist in the database, otherwise return an error.
+// availability - need to check integer
+app.post("/availability", function (req, res) {
+	const newProductPrice = req.body.unit_price;
+	const newProductSupplier = req.body.supplier_id;
+	const newProductId = req.body.prod_id;
+
+	if (!req.body.product_price) {
+		return res.status(400).send("Please enter product price");
+	}
+
+	if (!req.body.supplier_id) {
+		return res.status(400).send("Please enter supplier id");
+	}
+
+	if(!req.body.prod_id){
+		return res.status(400).send("Please enter product id")
+	}
+
+	pool.query("select * from  availability where product_id $1", [newProductId]).then((result) => {
+		if (result.rows.length > 0) {
+			return res.status(400).send("A product with this id already exists!");
+		} else {
+			const query = "insert into availability(newProductId, newProductSupplier, newProductPrice) VALUES ($1, $2, $3)";
+			pool
+				.query(query, [newProductId, newProductSupplier, newProductPrice])
+				.then(() => res.send("Product availbility created!"))
+				.catch((error) => {
+					console.error(error);
+					res.status(500).json(error);
+				});
+		}
+	});
+});
+
 // - Add a new POST endpoint `/customers/:customerId/orders` to create a new order (including an order date, and an order reference) for a customer. Check that the customerId corresponds to an existing customer or return an error.
+
 app.get("/", (req, res) => {
 	res.send("cyf ecommerce api");
 });
+
 module.exports = app;
